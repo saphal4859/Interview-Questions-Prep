@@ -1,14 +1,10 @@
 package com.prep.interviewprep.service;
 
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.List;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
-
-import java.time.Duration;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class RedisQuestionSessionService {
@@ -32,12 +28,12 @@ public class RedisQuestionSessionService {
 
   /**
    * Initializes Redis SET with all eligible question IDs.
-   * Redis stores ONLY IDs.
-   * TTL is for cleanup only.
+   * If empty → do nothing (VALID CASE).
    */
   public void initializeSession(String sessionId, List<Long> questionIds) {
+
     if (questionIds == null || questionIds.isEmpty()) {
-      throw new IllegalArgumentException("Cannot initialize session with empty question list");
+      return; // ✅ graceful no-op
     }
 
     String key = remainingIdsKey(sessionId);
@@ -55,12 +51,12 @@ public class RedisQuestionSessionService {
   /* ===================== FETCH ===================== */
 
   /**
-   * Atomically pops the next batch of question IDs.
-   * Uses Redis SPOP → guarantees NO REPEATS even under concurrency.
+   * Pops next batch of IDs.
+   * Uses SPOP → NO REPEATS guaranteed.
    */
   public List<Long> popNextBatch(String sessionId) {
-    String key = remainingIdsKey(sessionId);
 
+    String key = remainingIdsKey(sessionId);
     List<Long> result = new ArrayList<>(BATCH_SIZE);
 
     for (int i = 0; i < BATCH_SIZE; i++) {
@@ -74,26 +70,14 @@ public class RedisQuestionSessionService {
     return result;
   }
 
-
   /* ===================== UTILS ===================== */
 
-  public long getRemainingCount(String sessionId) {
+  public long remainingCount(String sessionId) {
     Long size = redisTemplate.opsForSet().size(remainingIdsKey(sessionId));
     return size == null ? 0 : size;
-  }
-
-  public boolean hasRemainingQuestions(String sessionId) {
-    return getRemainingCount(sessionId) > 0;
   }
 
   public void clearSession(String sessionId) {
     redisTemplate.delete(remainingIdsKey(sessionId));
   }
-  public long remainingCount(String sessionId) {
-    Long size = redisTemplate.opsForSet()
-        .size(remainingIdsKey(sessionId));
-
-    return size == null ? 0 : size;
-  }
-
 }

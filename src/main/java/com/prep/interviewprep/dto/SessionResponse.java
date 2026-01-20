@@ -16,5 +16,5 @@ public class SessionResponse {
 
   private String sessionId;
   private List<QuestionResponse> questions;
-  private long remainingCount;
+  private long totalCount;
 }
