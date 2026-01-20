@@ -3,6 +3,8 @@ package com.prep.interviewprep.service;
 import com.prep.interviewprep.dto.*;
 import com.prep.interviewprep.entity.Question;
 import com.prep.interviewprep.repository.QuestionRepository;
+import java.util.Map;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -10,96 +12,101 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class SessionService {
 
   private final QuestionService questionService;
-  private final RedisQuestionSessionService redisSessionService;
+  private final RedisQuestionSessionService redisService;
   private final QuestionRepository questionRepository;
-
 
   public SessionResponse startSession(SessionRequest request) {
 
-    // 1. Reuse EXISTING search logic
-    QuestionSearchRequest searchRequest = new QuestionSearchRequest();
-    searchRequest.setCategories(request.getCategories());
-    searchRequest.setSubCategories(request.getSubCategories());
-    searchRequest.setDifficulties(request.getDifficulties());
+    QuestionSearchResponse search =
+        questionService.search(toSearchRequest(request));
 
-    QuestionSearchResponse searchResponse =
-        questionService.search(searchRequest);
-
-    List<Long> eligibleIds = searchResponse.getQuestionIds();
-
-    if (eligibleIds.isEmpty()) {
-      throw new RuntimeException("No questions found for given filters");
+    if (search.getQuestionIds().isEmpty()) {
+      throw new IllegalStateException("No questions found");
     }
 
-    // 2. Create session
     String sessionId = UUID.randomUUID().toString();
+    redisService.initializeSession(sessionId, search.getQuestionIds());
 
-    // 3. Init Redis
-    redisSessionService.initializeSession(sessionId, eligibleIds);
+    List<QuestionResponse> firstBatch = fetchBatch(sessionId);
 
-    // 4. Fetch first batch
-    Set<Long> batchIds = redisSessionService.fetchNextBatch(sessionId);
-
-// 5. Fetch remaining count from Redis
-    long remainingCount = redisSessionService.getRemainingCount(sessionId);
-
-// 6. Fetch full questions
-    List<Question> questions = questionRepository.findAllById(batchIds);
-
-// 7. Map
-    List<QuestionResponse> responses = questions.stream()
-        .map(q -> QuestionResponse.builder()
-            .id(q.getId())
-            .category(q.getCategory())
-            .subCategory(q.getSubCategory())
-            .difficulty(q.getDifficulty())
-            .questionText(q.getQuestionText())
-            .shortAnswer(q.getShortAnswer())
-            .explanation(q.getExplanation())
-            .codeSnippet(q.getCodeSnippet())
-            .build())
-        .toList();
-
-// 8. Return response
-    SessionResponse response = new SessionResponse();
-    response.setSessionId(sessionId);
-    response.setQuestions(responses);
-    response.setRemainingCount(remainingCount);
-
-    return response;
+    return SessionResponse.builder()
+        .sessionId(sessionId)
+        .questions(firstBatch)
+        .remainingCount(redisService.remainingCount(sessionId))
+        .build();
   }
-  public List<QuestionResponse> next(SessionNextRequest request) {
 
-    String sessionId = request.getSessionId();
+  public NextQuestionResponse next(String sessionId) {
 
-    // 1. Pop next batch of IDs from Redis
-    Set<Long> batchIds = redisSessionService.fetchNextBatch(sessionId);
+    List<Question> batch = fetchBatchEntities(sessionId);
 
-    if (batchIds.isEmpty()) {
-      return List.of(); // frontend knows session ended
+    if (batch.isEmpty()) {
+      return NextQuestionResponse.builder()
+          .completed(true)
+          .batchRemaining(0)
+          .sessionRemaining(0)
+          .build();
     }
 
-    // 2. Fetch questions from DB
-    List<Question> questions = questionRepository.findAllById(batchIds);
+    Question q = batch.get(0);
 
-    // 3. Map to response
-    return questions.stream()
-        .map(q -> QuestionResponse.builder()
-            .id(q.getId())
-            .category(q.getCategory())
-            .subCategory(q.getSubCategory())
-            .difficulty(q.getDifficulty())
-            .questionText(q.getQuestionText())
-            .shortAnswer(q.getShortAnswer())
-            .explanation(q.getExplanation())
-            .codeSnippet(q.getCodeSnippet())
-            .build())
-        .collect(Collectors.toList());
+    return NextQuestionResponse.builder()
+        .completed(false)
+        .question(toResponse(q))
+        .batchRemaining(batch.size() - 1)
+        .sessionRemaining(redisService.remainingCount(sessionId))
+        .build();
+  }
+
+
+  /* ---------------- helpers ---------------- */
+
+  private List<QuestionResponse> fetchBatch(String sessionId) {
+    return fetchBatchEntities(sessionId).stream()
+        .map(this::toResponse)
+        .toList();
+  }
+
+  private List<Question> fetchBatchEntities(String sessionId) {
+    List<Long> ids = redisService.popNextBatch(sessionId);
+
+    if (ids.isEmpty()) return List.of();
+
+    // preserve order explicitly
+    Map<Long, Question> map =
+        questionRepository.findAllById(ids).stream()
+            .collect(Collectors.toMap(Question::getId, q -> q));
+
+    return ids.stream()
+        .map(map::get)
+        .filter(Objects::nonNull)
+        .toList();
+  }
+
+  private QuestionResponse toResponse(Question q) {
+    return QuestionResponse.builder()
+        .id(q.getId())
+        .category(q.getCategory())
+        .subCategory(q.getSubCategory())
+        .difficulty(q.getDifficulty())
+        .questionText(q.getQuestionText())
+        .shortAnswer(q.getShortAnswer())
+        .explanation(q.getExplanation())
+        .codeSnippet(q.getCodeSnippet())
+        .build();
+  }
+
+
+  private QuestionSearchRequest toSearchRequest(SessionRequest r) {
+    QuestionSearchRequest q = new QuestionSearchRequest();
+    q.setCategories(r.getCategories());
+    q.setSubCategories(r.getSubCategories());
+    q.setDifficulties(r.getDifficulties());
+    return q;
   }
 }

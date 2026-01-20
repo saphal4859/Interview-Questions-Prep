@@ -1,18 +1,19 @@
 package com.prep.interviewprep.service;
 
+import java.util.ArrayList;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Service;
-
 @Service
 public class RedisQuestionSessionService {
 
-  private static final int DEFAULT_BATCH_SIZE = 10;
+  private static final int BATCH_SIZE = 10;
   private static final Duration SESSION_TTL = Duration.ofHours(24);
 
   private final RedisTemplate<String, String> redisTemplate;
@@ -21,66 +22,78 @@ public class RedisQuestionSessionService {
     this.redisTemplate = redisTemplate;
   }
 
-  /* ===================== KEY ===================== */
+  /* ===================== KEYS ===================== */
 
-  private String getSessionKey(String sessionId) {
+  private String remainingIdsKey(String sessionId) {
     return "session:" + sessionId + ":remainingQuestionIds";
   }
 
   /* ===================== INIT ===================== */
 
   /**
-   * Initialize Redis SET with all eligible question IDs.
+   * Initializes Redis SET with all eligible question IDs.
+   * Redis stores ONLY IDs.
+   * TTL is for cleanup only.
    */
   public void initializeSession(String sessionId, List<Long> questionIds) {
-    String key = getSessionKey(sessionId);
+    if (questionIds == null || questionIds.isEmpty()) {
+      throw new IllegalArgumentException("Cannot initialize session with empty question list");
+    }
 
-    Set<String> values =
+    String key = remainingIdsKey(sessionId);
+
+    redisTemplate.opsForSet().add(
+        key,
         questionIds.stream()
             .map(String::valueOf)
-            .collect(Collectors.toSet());
+            .toArray(String[]::new)
+    );
 
-    redisTemplate.opsForSet().add(key, values.toArray(new String[0]));
     redisTemplate.expire(key, SESSION_TTL);
   }
 
   /* ===================== FETCH ===================== */
 
   /**
-   * Fetch next random batch of question IDs.
-   * Uses Redis SPOP → guarantees no repetition.
+   * Atomically pops the next batch of question IDs.
+   * Uses Redis SPOP → guarantees NO REPEATS even under concurrency.
    */
-  public Set<Long> fetchNextBatch(String sessionId) {
-    String key = getSessionKey(sessionId);
+  public List<Long> popNextBatch(String sessionId) {
+    String key = remainingIdsKey(sessionId);
 
-    List<String> popped =
-        redisTemplate.opsForSet().pop(key, DEFAULT_BATCH_SIZE);
+    List<Long> result = new ArrayList<>(BATCH_SIZE);
 
-    if (popped == null || popped.isEmpty()) {
-      return Set.of();
+    for (int i = 0; i < BATCH_SIZE; i++) {
+      String value = redisTemplate.opsForSet().pop(key);
+      if (value == null) {
+        break;
+      }
+      result.add(Long.valueOf(value));
     }
 
-    return popped.stream()
-        .map(Long::valueOf)
-        .collect(Collectors.toSet());
+    return result;
   }
 
 
   /* ===================== UTILS ===================== */
 
+  public long getRemainingCount(String sessionId) {
+    Long size = redisTemplate.opsForSet().size(remainingIdsKey(sessionId));
+    return size == null ? 0 : size;
+  }
+
   public boolean hasRemainingQuestions(String sessionId) {
-    String key = getSessionKey(sessionId);
-    Long size = redisTemplate.opsForSet().size(key);
-    return size != null && size > 0;
+    return getRemainingCount(sessionId) > 0;
   }
 
   public void clearSession(String sessionId) {
-    redisTemplate.delete(getSessionKey(sessionId));
+    redisTemplate.delete(remainingIdsKey(sessionId));
   }
-  public long getRemainingCount(String sessionId) {
-    String key = getSessionKey(sessionId);
-    Long size = redisTemplate.opsForSet().size(key);
-    return size != null ? size : 0;
+  public long remainingCount(String sessionId) {
+    Long size = redisTemplate.opsForSet()
+        .size(remainingIdsKey(sessionId));
+
+    return size == null ? 0 : size;
   }
 
 }

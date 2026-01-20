@@ -1,5 +1,6 @@
 package com.prep.interviewprep.controller;
 
+import com.prep.interviewprep.dto.NextQuestionResponse;
 import com.prep.interviewprep.dto.QuestionResponse;
 import com.prep.interviewprep.dto.SessionNextRequest;
 import com.prep.interviewprep.dto.SessionRequest;
@@ -28,7 +29,7 @@ public class SessionController {
     return sessionService.startSession(request);
   }
   @PostMapping("/next")
-  public List<QuestionResponse> next(@RequestBody SessionNextRequest request) {
-    return sessionService.next(request);
+  public NextQuestionResponse next(@RequestBody SessionNextRequest req) {
+    return sessionService.next(req.getSessionId());
   }
 }
