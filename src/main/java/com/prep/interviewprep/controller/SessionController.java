@@ -30,6 +30,6 @@ public class SessionController {
   }
   @PostMapping("/next")
   public NextQuestionResponse next(@RequestBody SessionNextRequest req) {
-    return sessionService.next(req.getSessionId());
+    return sessionService.nextBatch(req.getSessionId());
   }
 }

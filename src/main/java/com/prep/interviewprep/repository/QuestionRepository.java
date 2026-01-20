@@ -21,4 +21,14 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
       @Param("subCategories") Set<String> subCategories,
       @Param("difficulties") Set<Difficulty> difficulties
   );
+  @Query("select distinct q.category from Question q order by q.category")
+  List<String> findDistinctCategories();
+
+  @Query("""
+        select distinct q.subCategory
+        from Question q
+        where q.category in :categories
+        order by q.subCategory
+    """)
+  List<String> findDistinctSubCategories(@Param("categories") List<String> categories);
 }
