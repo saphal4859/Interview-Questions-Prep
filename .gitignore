@@ -1,0 +1,18 @@
+# ===== Java =====
+target/
+*.class
+
+# ===== Logs =====
+*.log
+
+# ===== Environment variables =====
+.env
+
+# ===== IDEs =====
+.idea/
+.vscode/
+*.iml
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
