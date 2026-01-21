@@ -33,7 +33,8 @@ public class SecurityConfig {
 
     config.setAllowedOrigins(List.of(
         "http://localhost:5173",
-        "http://localhost:8080"
+        "http://localhost:8080",
+        "https://interview-questions-prep-ui.vercel.app"
     ));
     config.setAllowedMethods(List.of(
         "GET", "POST", "PUT", "DELETE", "OPTIONS"
