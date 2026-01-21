@@ -10,6 +10,7 @@ spring:
       maximum-pool-size: 5
 
   jpa:
+    open-in-view: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: update
@@ -17,10 +18,17 @@ spring:
     properties:
       hibernate:
         format_sql: true
+        jdbc:
+          batch_size: 50
+          order_inserts: true
+          order_updates: true
   redis:
     host: ${REDIS_HOST}
     port: ${REDIS_PORT}
     password: ${REDIS_PASSWORD}
     ssl: ${REDIS_SSL:true}
     timeout: ${REDIS_TIMEOUT:10s}
+logging:
+  level:
+    org.hibernate.SQL: WARN
 # AWBkAAIncDFmYjEwNGE1Mzc4MWM0Y2ZlODZkOTdiYmMyNzM2OGQ4OXAxMjQ2NzY

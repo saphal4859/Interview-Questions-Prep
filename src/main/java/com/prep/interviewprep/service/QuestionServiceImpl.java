@@ -10,9 +10,11 @@ import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
@@ -43,6 +45,39 @@ public class QuestionServiceImpl implements QuestionService {
                 .codeSnippet(saved.getCodeSnippet())
                 .build();
     }
+
+    @Override
+    public List<QuestionResponse> createQuestions(List<QuestionCreateRequest> requests) {
+
+        List<Question> questions = requests.stream()
+            .map(request -> Question.builder()
+                .category(request.getCategory())
+                .subCategory(request.getSubCategory())
+                .difficulty(request.getDifficulty())
+                .questionText(request.getQuestionText())
+                .shortAnswer(request.getShortAnswer())
+                .explanation(request.getExplanation())
+                .codeSnippet(request.getCodeSnippet())
+                .build())
+            .toList();
+
+        List<Question> savedQuestions = questionRepository.saveAll(questions);
+
+        return savedQuestions.stream()
+            .map(saved -> QuestionResponse.builder()
+                .id(saved.getId())
+                .category(saved.getCategory())
+                .subCategory(saved.getSubCategory())
+                .difficulty(saved.getDifficulty())
+                .questionText(saved.getQuestionText())
+                .shortAnswer(saved.getShortAnswer())
+                .explanation(saved.getExplanation())
+                .codeSnippet(saved.getCodeSnippet())
+                .build())
+            .toList();
+    }
+
+    @Transactional(readOnly = true)
     public QuestionSearchResponse search(QuestionSearchRequest request) {
 
         List<Long> ids = questionRepository.findQuestionIdsByFilters(

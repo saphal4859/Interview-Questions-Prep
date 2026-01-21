@@ -6,6 +6,7 @@ import com.prep.interviewprep.dto.QuestionSearchRequest;
 import com.prep.interviewprep.dto.QuestionSearchResponse;
 import com.prep.interviewprep.service.QuestionService;
 import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,13 @@ public class QuestionController {
     @ResponseStatus(HttpStatus.CREATED)
     public QuestionResponse addQuestion(@Valid @RequestBody QuestionCreateRequest request) {
         return questionService.createQuestion(request);
+    }
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<QuestionResponse> addQuestions(
+        @Valid @RequestBody List<QuestionCreateRequest> requests
+    ) {
+        return questionService.createQuestions(requests);
     }
     @PostMapping("/search")
     public ResponseEntity<QuestionSearchResponse> search(
