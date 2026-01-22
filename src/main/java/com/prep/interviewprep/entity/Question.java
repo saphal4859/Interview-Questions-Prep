@@ -25,7 +25,7 @@ public class Question {
     @SequenceGenerator(
         name = "question_seq",
         sequenceName = "question_seq",
-        allocationSize = 100
+        allocationSize = 1
     )
     private Long id;
 
