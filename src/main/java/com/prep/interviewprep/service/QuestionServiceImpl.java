@@ -4,14 +4,15 @@ import com.prep.interviewprep.dto.QuestionCreateRequest;
 import com.prep.interviewprep.dto.QuestionResponse;
 import com.prep.interviewprep.dto.QuestionSearchRequest;
 import com.prep.interviewprep.dto.QuestionSearchResponse;
+import com.prep.interviewprep.dto.QuestionUpdateRequest;
 import com.prep.interviewprep.entity.Question;
 import com.prep.interviewprep.repository.QuestionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,7 +23,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
 
-    @CacheEvict(value = "metadataFilters", allEntries = true)
+    @CacheEvict(value = "metadataFilters:v3", allEntries = true)
     @Override
     public QuestionResponse createQuestion(QuestionCreateRequest request) {
 
@@ -49,7 +50,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .codeSnippet(saved.getCodeSnippet())
                 .build();
     }
-    @CacheEvict(value = "metadataFilters", allEntries = true)
+    @CacheEvict(value = "metadataFilters:v3", allEntries = true)
     @Override
     public List<QuestionResponse> createQuestions(List<QuestionCreateRequest> requests) {
 
@@ -98,5 +99,33 @@ public class QuestionServiceImpl implements QuestionService {
 
     private <T> Set<T> emptyToNull(Set<T> set) {
         return (set == null || set.isEmpty()) ? null : set;
+    }
+    @CacheEvict(value = "metadataFilters:v3", allEntries = true)
+    @Override
+    public QuestionResponse updateQuestion(Long id, QuestionUpdateRequest request) {
+
+        Question question = questionRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Question not found with id: " + id));
+
+        question.setCategory(request.getCategory());
+        question.setSubCategory(request.getSubCategory());
+        question.setDifficulty(request.getDifficulty());
+        question.setQuestionText(request.getQuestionText());
+        question.setShortAnswer(request.getShortAnswer());
+        question.setExplanation(request.getExplanation());
+        question.setCodeSnippet(request.getCodeSnippet());
+
+        Question saved = questionRepository.save(question);
+
+        return QuestionResponse.builder()
+            .id(saved.getId())
+            .category(saved.getCategory())
+            .subCategory(saved.getSubCategory())
+            .difficulty(saved.getDifficulty())
+            .questionText(saved.getQuestionText())
+            .shortAnswer(saved.getShortAnswer())
+            .explanation(saved.getExplanation())
+            .codeSnippet(saved.getCodeSnippet())
+            .build();
     }
 }

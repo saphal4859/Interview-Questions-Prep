@@ -4,6 +4,7 @@ import com.prep.interviewprep.dto.QuestionCreateRequest;
 import com.prep.interviewprep.dto.QuestionResponse;
 import com.prep.interviewprep.dto.QuestionSearchRequest;
 import com.prep.interviewprep.dto.QuestionSearchResponse;
+import com.prep.interviewprep.dto.QuestionUpdateRequest;
 import com.prep.interviewprep.service.QuestionService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -37,4 +38,12 @@ public class QuestionController {
     ) {
         return ResponseEntity.ok(questionService.search(request));
     }
+    @PutMapping("/{id}")
+    public ResponseEntity<QuestionResponse> updateQuestion(
+        @PathVariable Long id,
+        @Valid @RequestBody QuestionUpdateRequest request
+    ) {
+        return ResponseEntity.ok(questionService.updateQuestion(id, request));
+    }
+
 }
