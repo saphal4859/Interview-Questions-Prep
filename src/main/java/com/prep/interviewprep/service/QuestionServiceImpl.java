@@ -9,6 +9,9 @@ import com.prep.interviewprep.repository.QuestionRepository;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,6 +22,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
 
+    @CacheEvict(value = "metadataFilters", allEntries = true)
     @Override
     public QuestionResponse createQuestion(QuestionCreateRequest request) {
 
@@ -45,7 +49,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .codeSnippet(saved.getCodeSnippet())
                 .build();
     }
-
+    @CacheEvict(value = "metadataFilters", allEntries = true)
     @Override
     public List<QuestionResponse> createQuestions(List<QuestionCreateRequest> requests) {
 
@@ -76,7 +80,10 @@ public class QuestionServiceImpl implements QuestionService {
                 .build())
             .toList();
     }
-
+    @Cacheable(
+        value = "questionSearch",
+        key = "T(java.util.Objects).hash(#request.categories, #request.subCategories, #request.difficulties)"
+    )
     @Transactional(readOnly = true)
     public QuestionSearchResponse search(QuestionSearchRequest request) {
 

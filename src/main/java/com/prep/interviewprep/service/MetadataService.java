@@ -7,14 +7,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class MetadataService {
 
   private final QuestionRepository questionRepository;
-
+  @Cacheable(value = "metadataFilters")
   public FiltersResponse getFilters() {
     List<String> categories = getCategories()
         .stream()

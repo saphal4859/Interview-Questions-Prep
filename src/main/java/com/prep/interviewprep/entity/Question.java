@@ -21,7 +21,12 @@ import java.time.LocalDateTime;
 public class Question {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "question_seq")
+    @SequenceGenerator(
+        name = "question_seq",
+        sequenceName = "question_seq",
+        allocationSize = 100
+    )
     private Long id;
 
     @Enumerated(EnumType.STRING)
