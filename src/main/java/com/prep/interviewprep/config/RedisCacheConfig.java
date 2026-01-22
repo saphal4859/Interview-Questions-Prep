@@ -1,5 +1,7 @@
 package com.prep.interviewprep.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import java.time.Duration;
 import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
@@ -16,14 +18,17 @@ public class RedisCacheConfig {
   @Bean
   public CacheManager cacheManager(RedisConnectionFactory connectionFactory) {
 
+    ObjectMapper objectMapper = JsonMapper.builder()
+        .findAndAddModules()
+        .build();
+    GenericJackson2JsonRedisSerializer serializer =
+        new GenericJackson2JsonRedisSerializer(objectMapper);
     RedisCacheConfiguration config =
         RedisCacheConfiguration.defaultCacheConfig()
-            .entryTtl(Duration.ofMinutes(30)) // default TTL
+            .entryTtl(Duration.ofMinutes(30))
             .disableCachingNullValues()
             .serializeValuesWith(
-                RedisSerializationContext.SerializationPair.fromSerializer(
-                    new GenericJackson2JsonRedisSerializer()
-                )
+                RedisSerializationContext.SerializationPair.fromSerializer(serializer)
             );
 
     return RedisCacheManager.builder(connectionFactory)
@@ -31,3 +36,5 @@ public class RedisCacheConfig {
         .build();
   }
 }
+
+

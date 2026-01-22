@@ -3,6 +3,8 @@ package com.prep.interviewprep.service;
 import com.prep.interviewprep.dto.FiltersResponse;
 import com.prep.interviewprep.entity.Difficulty;
 import com.prep.interviewprep.repository.QuestionRepository;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,15 +21,17 @@ public class MetadataService {
   private final QuestionRepository questionRepository;
   @Cacheable(value = "metadataFilters")
   public FiltersResponse getFilters() {
-    List<String> categories = getCategories()
-        .stream()
-        .sorted()
-        .toList();
+
+    List<String> categories = new ArrayList<>(
+        getCategories().stream()
+            .sorted()
+            .toList()
+    );
 
     return new FiltersResponse(
         categories,
         getSubCategoriesGrouped(categories),
-        getDifficulties()
+        new ArrayList<>(getDifficulties())
     );
   }
 
@@ -38,15 +42,19 @@ public class MetadataService {
 
   /** Subcategories grouped by category */
   public Map<String, List<String>> getSubCategoriesGrouped(List<String> categories) {
+
     Map<String, List<String>> map = new HashMap<>();
 
     for (String category : categories) {
-      List<String> subs = questionRepository
-          .findDistinctSubCategories(List.of(category))
-          .stream()
-          .map(String::toUpperCase)
-          .sorted()
-          .toList();
+
+      List<String> subs = new ArrayList<>(
+          questionRepository
+              .findDistinctSubCategories(Collections.singletonList(category))
+              .stream()
+              .map(String::toUpperCase)
+              .sorted()
+              .toList()
+      );
 
       map.put(category, subs);
     }
@@ -55,8 +63,10 @@ public class MetadataService {
 
   /** Difficulty from enum */
   public List<String> getDifficulties() {
-    return List.of(Difficulty.EASY.name(),
+    return new ArrayList<>(List.of(
+        Difficulty.EASY.name(),
         Difficulty.MEDIUM.name(),
-        Difficulty.HARD.name());
+        Difficulty.HARD.name()
+    ));
   }
 }
