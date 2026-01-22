@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MetadataService {
 
   private final QuestionRepository questionRepository;
-  @Cacheable(value = "metadataFilters:v2")
+  @Cacheable(value = "metadataFilters:v3")
   public FiltersResponse getFilters() {
 
     List<String> categories = new ArrayList<>(
