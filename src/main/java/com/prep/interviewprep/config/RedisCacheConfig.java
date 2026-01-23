@@ -37,7 +37,7 @@ public class RedisCacheConfig {
             );
 
     return RedisCacheManager.builder(connectionFactory)
-        .withCacheConfiguration("metadataFilters:v3", filtersCacheConfig)
+        .withCacheConfiguration(CacheNames.METADATA_FILTERS_VERSION, filtersCacheConfig)
         .build();
   }
 }

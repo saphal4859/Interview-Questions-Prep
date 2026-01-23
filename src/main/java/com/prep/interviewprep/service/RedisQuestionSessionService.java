@@ -12,9 +12,9 @@ public class RedisQuestionSessionService {
   private static final int BATCH_SIZE = 10;
   private static final Duration SESSION_TTL = Duration.ofHours(24);
 
-  private final RedisTemplate<String, String> redisTemplate;
+  private final RedisTemplate<String, Long> redisTemplate;
 
-  public RedisQuestionSessionService(RedisTemplate<String, String> redisTemplate) {
+  public RedisQuestionSessionService(RedisTemplate<String, Long> redisTemplate) {
     this.redisTemplate = redisTemplate;
   }
 
@@ -27,32 +27,32 @@ public class RedisQuestionSessionService {
   /* ===================== INIT ===================== */
 
   /**
-   * Initializes Redis SET with all eligible question IDs.
-   * If empty → do nothing (VALID CASE).
+   * Initializes Redis LIST with all eligible question IDs.
+   * Order of IDs is preserved.
    */
   public void initializeSession(String sessionId, List<Long> questionIds) {
 
     if (questionIds == null || questionIds.isEmpty()) {
-      return; // ✅ graceful no-op
+      return; // graceful no-op
     }
 
     String key = remainingIdsKey(sessionId);
 
-    redisTemplate.opsForSet().add(
-        key,
-        questionIds.stream()
-            .map(String::valueOf)
-            .toArray(String[]::new)
-    );
+    // Safety: clear any existing session data
+    redisTemplate.delete(key);
 
+    // Push all IDs in order
+    redisTemplate.opsForList().rightPushAll(key, questionIds);
+
+    // Set TTL for session
     redisTemplate.expire(key, SESSION_TTL);
   }
 
   /* ===================== FETCH ===================== */
 
   /**
-   * Pops next batch of IDs.
-   * Uses SPOP → NO REPEATS guaranteed.
+   * Pops the next batch of question IDs in order.
+   * Uses LIST → deterministic order guaranteed.
    */
   public List<Long> popNextBatch(String sessionId) {
 
@@ -60,11 +60,11 @@ public class RedisQuestionSessionService {
     List<Long> result = new ArrayList<>(BATCH_SIZE);
 
     for (int i = 0; i < BATCH_SIZE; i++) {
-      String value = redisTemplate.opsForSet().pop(key);
+      Long value = redisTemplate.opsForList().leftPop(key);
       if (value == null) {
         break;
       }
-      result.add(Long.valueOf(value));
+      result.add(value);
     }
 
     return result;
@@ -72,11 +72,17 @@ public class RedisQuestionSessionService {
 
   /* ===================== UTILS ===================== */
 
+  /**
+   * Returns remaining question count for the session.
+   */
   public long remainingCount(String sessionId) {
-    Long size = redisTemplate.opsForSet().size(remainingIdsKey(sessionId));
+    Long size = redisTemplate.opsForList().size(remainingIdsKey(sessionId));
     return size == null ? 0 : size;
   }
 
+  /**
+   * Clears session explicitly (optional cleanup).
+   */
   public void clearSession(String sessionId) {
     redisTemplate.delete(remainingIdsKey(sessionId));
   }

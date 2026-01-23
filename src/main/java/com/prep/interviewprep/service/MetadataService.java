@@ -1,5 +1,6 @@
 package com.prep.interviewprep.service;
 
+import com.prep.interviewprep.config.CacheNames;
 import com.prep.interviewprep.dto.FiltersResponse;
 import com.prep.interviewprep.entity.Difficulty;
 import com.prep.interviewprep.repository.QuestionRepository;
@@ -19,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MetadataService {
 
   private final QuestionRepository questionRepository;
-  @Cacheable(value = "metadataFilters:v3")
+  @Cacheable(value = CacheNames.METADATA_FILTERS_VERSION)
   public FiltersResponse getFilters() {
 
     List<String> categories = new ArrayList<>(
