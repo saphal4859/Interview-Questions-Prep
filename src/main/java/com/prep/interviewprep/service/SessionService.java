@@ -6,10 +6,12 @@ import com.prep.interviewprep.repository.QuestionRepository;
 import java.util.*;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class SessionService {
 
   private final RedisQuestionSessionService redisService;
@@ -50,6 +52,9 @@ public class SessionService {
     // 5. Fetch first batch
     List<Long> batchIds = redisService.popNextBatch(sessionId);
     List<QuestionResponse> questions = fetchQuestions(batchIds);
+    log.info("DB IDS: {}", questionIds);
+    log.info("REDIS POP IDS: {}", batchIds);
+    log.info("FINAL IDS: {}", questions.stream().map(QuestionResponse::getId).toList());
 
     return SessionResponse.builder()
         .sessionId(sessionId)

@@ -33,10 +33,10 @@ public class RedisConfig {
   }
 
   @Bean
-  public RedisTemplate<String, String> redisTemplate(
+  public RedisTemplate<String, Long> redisTemplate(
       LettuceConnectionFactory connectionFactory) {
 
-    RedisTemplate<String, String> template = new RedisTemplate<>();
+    RedisTemplate<String, Long> template = new RedisTemplate<>();
     template.setConnectionFactory(connectionFactory);
 
     template.setKeySerializer(new StringRedisSerializer());

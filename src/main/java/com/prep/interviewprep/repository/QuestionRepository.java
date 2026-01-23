@@ -15,7 +15,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
         WHERE (:categories IS NULL OR q.category IN :categories)
           AND (:subCategories IS NULL OR q.subCategory IN :subCategories)
           AND (:difficulties IS NULL OR q.difficulty IN :difficulties)
-          ORDER BY q.id
+          ORDER BY q.id ASC
     """)
   List<Long> findQuestionIdsByFilters(
       @Param("categories") Set<Category> categories,
