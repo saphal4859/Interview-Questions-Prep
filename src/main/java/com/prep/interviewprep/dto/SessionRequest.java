@@ -12,4 +12,5 @@ public class SessionRequest {
   private Set<Category> categories;
   private Set<String> subCategories;
   private Set<Difficulty> difficulties;
+  private boolean shuffle = true;
 }

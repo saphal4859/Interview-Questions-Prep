@@ -36,7 +36,10 @@ public class SessionService {
     }
 
     // 2. Randomize once per session
-    Collections.shuffle(questionIds);
+    if (request.isShuffle()) {
+      Collections.shuffle(questionIds);
+    }
+
 
     // 3. Create session
     String sessionId = UUID.randomUUID().toString();
