@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class RedisQuestionSessionService {
 
-  private static final int BATCH_SIZE = 10;
+  private static final int BATCH_SIZE = 50;
   private static final Duration SESSION_TTL = Duration.ofHours(24);
 
   private final RedisTemplate<String, Long> redisTemplate;
