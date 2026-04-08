@@ -65,4 +65,21 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
     group by q.category, q.subCategory
   """)
   List<Object[]> subCategoryCountByCategory();
+  @Query("""
+  SELECT q.category, q.subCategory, q.difficulty, COUNT(q)
+  FROM Question q
+  GROUP BY q.category, q.subCategory, q.difficulty
+""")
+  List<Object[]> difficultySplitBySubCategory();
+  @Query("""
+  SELECT 
+    q.category,
+    q.subCategory,
+    q.difficulty,
+    COUNT(q)
+  FROM Question q
+  GROUP BY q.category, q.subCategory, q.difficulty
+  ORDER BY q.category, q.subCategory
+""")
+  List<Object[]> getFullDashboardData();
 }

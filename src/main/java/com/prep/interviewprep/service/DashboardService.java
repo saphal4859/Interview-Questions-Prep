@@ -16,57 +16,87 @@ public class DashboardService {
 
     DashboardResponse response = new DashboardResponse();
 
-    // ---------------- SUMMARY ----------------
-    DashboardResponse.Summary summary = new DashboardResponse.Summary();
-    summary.setTotalCategories(questionRepository.countDistinctCategories());
-    summary.setTotalSubCategories(questionRepository.countDistinctSubCategories());
-    summary.setTotalQuestions(questionRepository.countTotalQuestions());
-    response.setSummary(summary);
-
-    // ---------------- CATEGORY MAP ----------------
+    // category → subcategory map
     Map<String, DashboardResponse.CategoryStats> categoryMap = new LinkedHashMap<>();
+    Map<String, Map<String, DashboardResponse.SubCategoryStats>> subCategoryMap = new HashMap<>();
 
-    // ---- total questions per category
-    for (Object[] row : questionRepository.countQuestionsByCategory()) {
-      String category = row[0].toString();
-      long count = (long) row[1];
+    List<Object[]> rows = questionRepository.getFullDashboardData();
 
-      DashboardResponse.CategoryStats cs = new DashboardResponse.CategoryStats();
-      cs.setCategory(category);
-      cs.setTotalQuestions(count);
-      cs.setDifficultySplit(new HashMap<>());
-      cs.setSubCategories(new ArrayList<>());
-
-      categoryMap.put(category, cs);
-    }
-
-    // ---- difficulty split
-    for (Object[] row : questionRepository.difficultySplitByCategory()) {
-      String category = row[0].toString();
-      String difficulty = row[1].toString();
-      long count = (long) row[2];
-
-      categoryMap
-          .get(category)
-          .getDifficultySplit()
-          .put(difficulty, count);
-    }
-
-    // ---- sub categories
-    for (Object[] row : questionRepository.subCategoryCountByCategory()) {
+    for (Object[] row : rows) {
       String category = row[0].toString();
       String subCategory = row[1].toString();
-      long count = (long) row[2];
+      String difficulty = row[2].toString();
+      long count = (long) row[3];
+
+      // ---------------- CATEGORY ----------------
+      DashboardResponse.CategoryStats cs =
+          categoryMap.computeIfAbsent(category, k -> {
+            DashboardResponse.CategoryStats c = new DashboardResponse.CategoryStats();
+            c.setCategory(category);
+            c.setSubCategories(new ArrayList<>());
+            return c;
+          });
+
+      // ---------------- SUBCATEGORY MAP ----------------
+      Map<String, DashboardResponse.SubCategoryStats> subMap =
+          subCategoryMap.computeIfAbsent(category, k -> new HashMap<>());
 
       DashboardResponse.SubCategoryStats sc =
-          new DashboardResponse.SubCategoryStats();
-      sc.setName(subCategory);
-      sc.setQuestionCount(count);
+          subMap.computeIfAbsent(subCategory, k -> {
+            DashboardResponse.SubCategoryStats s = new DashboardResponse.SubCategoryStats();
+            s.setName(subCategory);
+            return s;
+          });
 
-      categoryMap.get(category).getSubCategories().add(sc);
+      // ---------------- APPLY COUNTS ----------------
+      switch (difficulty) {
+        case "EASY" -> {
+          cs.setEasy(cs.getEasy() + count);
+          sc.setEasy(sc.getEasy() + count);
+        }
+        case "MEDIUM" -> {
+          cs.setMedium(cs.getMedium() + count);
+          sc.setMedium(sc.getMedium() + count);
+        }
+        case "HARD" -> {
+          cs.setHard(cs.getHard() + count);
+          sc.setHard(sc.getHard() + count);
+        }
+      }
+
+      // totals
+      cs.setTotalQuestions(cs.getTotalQuestions() + count);
+      sc.setQuestionCount(sc.getQuestionCount() + count);
     }
 
+    // ---------------- CONVERT MAP → LIST ----------------
+    for (String category : categoryMap.keySet()) {
+      Map<String, DashboardResponse.SubCategoryStats> subMap = subCategoryMap.get(category);
+
+      categoryMap.get(category)
+          .setSubCategories(new ArrayList<>(subMap.values()));
+    }
+
+    // ---------------- FINAL RESPONSE ----------------
     response.setCategories(new ArrayList<>(categoryMap.values()));
+
+    // ---------------- SUMMARY ----------------
+    DashboardResponse.Summary summary = new DashboardResponse.Summary();
+
+    summary.setTotalCategories(categoryMap.size());
+
+    summary.setTotalSubCategories(
+        subCategoryMap.values().stream()
+            .mapToLong(Map::size)
+            .sum());
+
+    summary.setTotalQuestions(
+        categoryMap.values().stream()
+            .mapToLong(DashboardResponse.CategoryStats::getTotalQuestions)
+            .sum());
+
+    response.setSummary(summary);
+
     return response;
   }
 }

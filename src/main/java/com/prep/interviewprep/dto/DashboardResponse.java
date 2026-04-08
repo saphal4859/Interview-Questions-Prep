@@ -22,7 +22,9 @@ public class DashboardResponse {
   public static class CategoryStats {
     private String category;
     private long totalQuestions;
-    private Map<String, Long> difficultySplit;
+    private long easy;
+    private long medium;
+    private long hard;
     private List<SubCategoryStats> subCategories;
   }
 
@@ -30,5 +32,8 @@ public class DashboardResponse {
   public static class SubCategoryStats {
     private String name;
     private long questionCount;
+    private long easy;
+    private long medium;
+    private long hard;
   }
 }
