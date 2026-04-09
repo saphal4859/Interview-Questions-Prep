@@ -45,5 +45,34 @@ public class QuestionController {
     ) {
         return ResponseEntity.ok(questionService.updateQuestion(id, request));
     }
+    @PostMapping("/download")
+    public ResponseEntity<byte[]> downloadQuestions(
+        @RequestBody QuestionSearchRequest request
+    ) {
+        byte[] file = questionService.downloadQuestions(request);
+
+        String filename = buildFileName(request);
+
+        return ResponseEntity.ok()
+            .header("Content-Disposition", "attachment; filename=" + filename)
+            .header("Content-Type", "text/plain")
+            .body(file);
+    }
+    private String buildFileName(QuestionSearchRequest request) {
+
+        String category = (request.getCategories() != null && !request.getCategories().isEmpty())
+            ? String.join("-", request.getCategories().stream().map(Enum::name).toList())
+            : "ALL";
+
+        String subCategory = (request.getSubCategories() != null && !request.getSubCategories().isEmpty())
+            ? String.join("-", request.getSubCategories())
+            : "ALL";
+
+        String difficulty = (request.getDifficulties() != null && !request.getDifficulties().isEmpty())
+            ? String.join("-", request.getDifficulties().stream().map(Enum::name).toList())
+            : "ALL";
+
+        return String.format("questions_%s_%s_%s.txt", category, subCategory, difficulty);
+    }
 
 }

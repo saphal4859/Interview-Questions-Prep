@@ -13,4 +13,6 @@ public interface QuestionService {
 
     QuestionSearchResponse search (QuestionSearchRequest request);
     QuestionResponse updateQuestion(Long id, QuestionUpdateRequest request);
+
+    byte[] downloadQuestions(QuestionSearchRequest request);
 }

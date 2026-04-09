@@ -129,4 +129,32 @@ public class QuestionServiceImpl implements QuestionService {
             .codeSnippet(saved.getCodeSnippet())
             .build();
     }
+    @Transactional(readOnly = true)
+    public byte[] downloadQuestions(QuestionSearchRequest request) {
+
+        if ((request.getCategories() == null || request.getCategories().isEmpty()) &&
+            (request.getSubCategories() == null || request.getSubCategories().isEmpty())) {
+            throw new IllegalArgumentException("Either category or subCategory must be provided");
+        }
+
+        List<String> questions = questionRepository.findQuestionTextsByFilters(
+            emptyToNull(request.getCategories()),
+            emptyToNull(request.getSubCategories()),
+            emptyToNull(request.getDifficulties())
+        );
+
+        // Optional safety guard (VERY IMPORTANT at scale)
+        if (questions.size() > 10000) {
+            throw new RuntimeException("Too many questions requested");
+        }
+
+        StringBuilder sb = new StringBuilder(questions.size() * 80); // pre-size
+
+        int i = 1;
+        for (String q : questions) {
+            sb.append(i++).append(". ").append(q).append("\n\n");
+        }
+
+        return sb.toString().getBytes();
+    }
 }
