@@ -32,45 +32,7 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
         order by q.subCategory
     """)
   List<String> findDistinctSubCategories(@Param("categories") List<String> categories);
-  // ---- SUMMARY ----
-  @Query("select count(distinct q.category) from Question q")
-  long countDistinctCategories();
 
-  @Query("select count(distinct q.subCategory) from Question q")
-  long countDistinctSubCategories();
-
-  @Query("select count(q) from Question q")
-  long countTotalQuestions();
-
-  // ---- CATEGORY LEVEL ----
-  @Query("""
-    select q.category, count(q)
-    from Question q
-    group by q.category
-  """)
-  List<Object[]> countQuestionsByCategory();
-
-  // ---- DIFFICULTY SPLIT ----
-  @Query("""
-    select q.category, q.difficulty, count(q)
-    from Question q
-    group by q.category, q.difficulty
-  """)
-  List<Object[]> difficultySplitByCategory();
-
-  // ---- SUB CATEGORY ----
-  @Query("""
-    select q.category, q.subCategory, count(q)
-    from Question q
-    group by q.category, q.subCategory
-  """)
-  List<Object[]> subCategoryCountByCategory();
-  @Query("""
-  SELECT q.category, q.subCategory, q.difficulty, COUNT(q)
-  FROM Question q
-  GROUP BY q.category, q.subCategory, q.difficulty
-""")
-  List<Object[]> difficultySplitBySubCategory();
   @Query("""
   SELECT 
     q.category,
