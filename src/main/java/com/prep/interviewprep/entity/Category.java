@@ -17,5 +17,6 @@ public enum Category {
   NOSQL,
   DOCKER,
   REDIS,
-  TESTING
+  TESTING,
+  DSA
 }
