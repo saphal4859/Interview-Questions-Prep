@@ -31,7 +31,7 @@ public class QuestionServiceImpl implements QuestionService {
 
         Question question = Question.builder()
                 .category(request.getCategory())
-                .subCategory(request.getSubCategory())
+                .subCategory(request.getSubCategory().trim().toUpperCase())
                 .difficulty(request.getDifficulty())
                 .questionText(request.getQuestionText())
                 .shortAnswer(request.getShortAnswer())
@@ -59,7 +59,7 @@ public class QuestionServiceImpl implements QuestionService {
         List<Question> questions = requests.stream()
             .map(request -> Question.builder()
                 .category(request.getCategory())
-                .subCategory(request.getSubCategory())
+                .subCategory(request.getSubCategory().trim().toUpperCase())
                 .difficulty(request.getDifficulty())
                 .questionText(request.getQuestionText())
                 .shortAnswer(request.getShortAnswer())
@@ -110,7 +110,7 @@ public class QuestionServiceImpl implements QuestionService {
             .orElseThrow(() -> new EntityNotFoundException("Question not found with id: " + id));
 
         question.setCategory(request.getCategory());
-        question.setSubCategory(request.getSubCategory());
+        question.setSubCategory(request.getSubCategory().trim().toUpperCase());
         question.setDifficulty(request.getDifficulty());
         question.setQuestionText(request.getQuestionText());
         question.setShortAnswer(request.getShortAnswer());
