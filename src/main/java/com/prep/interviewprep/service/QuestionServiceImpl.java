@@ -37,6 +37,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .shortAnswer(request.getShortAnswer())
                 .explanation(request.getExplanation())
                 .codeSnippet(request.getCodeSnippet())
+            .link(request.getLink())
                 .build();
 
         Question saved = questionRepository.save(question);
@@ -50,6 +51,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .shortAnswer(saved.getShortAnswer())
                 .explanation(saved.getExplanation())
                 .codeSnippet(saved.getCodeSnippet())
+            .link(saved.getLink())
                 .build();
     }
     @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, key = "'filters'")
@@ -65,6 +67,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .shortAnswer(request.getShortAnswer())
                 .explanation(request.getExplanation())
                 .codeSnippet(request.getCodeSnippet())
+                .link(request.getLink())
                 .build())
             .toList();
 
@@ -80,6 +83,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .shortAnswer(saved.getShortAnswer())
                 .explanation(saved.getExplanation())
                 .codeSnippet(saved.getCodeSnippet())
+                .link(saved.getLink())
                 .build())
             .toList();
     }
@@ -116,6 +120,7 @@ public class QuestionServiceImpl implements QuestionService {
         question.setShortAnswer(request.getShortAnswer());
         question.setExplanation(request.getExplanation());
         question.setCodeSnippet(request.getCodeSnippet());
+        question.setLink(request.getLink());
 
         Question saved = questionRepository.save(question);
 
@@ -128,6 +133,7 @@ public class QuestionServiceImpl implements QuestionService {
             .shortAnswer(saved.getShortAnswer())
             .explanation(saved.getExplanation())
             .codeSnippet(saved.getCodeSnippet())
+            .link(saved.getLink())
             .build();
     }
     @Transactional(readOnly = true)
