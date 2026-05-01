@@ -26,11 +26,11 @@ public interface QuestionRepository extends JpaRepository<Question, Long> {
   );
 
   @Query("""
-        SELECT DISTINCT CAST(q.category AS string)
-        FROM Question q
-        WHERE q.deleted = false
-        ORDER BY q.category
-    """)
+    SELECT DISTINCT q.category
+    FROM Question q
+    WHERE q.deleted = false
+    ORDER BY q.category
+""")
   List<String> findDistinctCategories();
 
   @Query("""
