@@ -37,7 +37,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .shortAnswer(request.getShortAnswer())
                 .explanation(request.getExplanation())
                 .codeSnippet(request.getCodeSnippet())
-            .link(request.getLink())
+                .link(request.getLink())
                 .build();
 
         Question saved = questionRepository.save(question);
@@ -51,7 +51,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .shortAnswer(saved.getShortAnswer())
                 .explanation(saved.getExplanation())
                 .codeSnippet(saved.getCodeSnippet())
-            .link(saved.getLink())
+                .link(saved.getLink())
                 .build();
     }
     @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, key = "'filters'")

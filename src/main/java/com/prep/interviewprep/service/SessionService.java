@@ -125,6 +125,7 @@ public class SessionService {
         .shortAnswer(q.getShortAnswer())
         .explanation(q.getExplanation())
         .codeSnippet(q.getCodeSnippet())
+        .link(q.getLink())
         .build();
   }
 }
