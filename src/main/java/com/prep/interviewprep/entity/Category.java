@@ -1,7 +1,5 @@
 package com.prep.interviewprep.entity;
 
-import org.hibernate.annotations.processing.SQL;
-
 public enum Category {
   JAVA,
   SPRING_CORE,

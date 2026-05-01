@@ -20,10 +20,11 @@ public class QuestionCreateRequest {
 
     @NotBlank
     private String questionText;
-
+    private String link;
     @NotBlank
     private String shortAnswer;
 
     private String explanation;
     private String codeSnippet;
+
 }

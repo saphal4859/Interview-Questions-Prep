@@ -13,6 +13,6 @@ public interface QuestionService {
 
     QuestionSearchResponse search (QuestionSearchRequest request);
     QuestionResponse updateQuestion(Long id, QuestionUpdateRequest request);
-
+    void deleteQuestion(Long id);
     byte[] downloadQuestions(QuestionSearchRequest request);
 }

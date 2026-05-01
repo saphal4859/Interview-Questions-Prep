@@ -9,6 +9,7 @@ import com.prep.interviewprep.dto.QuestionUpdateRequest;
 import com.prep.interviewprep.entity.Question;
 import com.prep.interviewprep.repository.QuestionRepository;
 import jakarta.persistence.EntityNotFoundException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
@@ -156,5 +157,18 @@ public class QuestionServiceImpl implements QuestionService {
         }
 
         return sb.toString().getBytes();
+    }
+    @CacheEvict(
+        value = {CacheNames.METADATA_FILTERS_VERSION, "questionSearch"},
+        allEntries = true
+    )
+    @Override
+    public void deleteQuestion(Long id) {
+
+        Question question = questionRepository.findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Question not found with id: " + id));
+        question.setDeleted(true);
+        question.setDeletedAt(LocalDateTime.now());
+        questionRepository.save(question);
     }
 }

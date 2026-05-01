@@ -4,15 +4,19 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import org.hibernate.annotations.Where;
+
 @Entity
 @Table(
     name = "questions",
     indexes = {
         @Index(name = "idx_question_category", columnList = "category"),
         @Index(name = "idx_question_sub_category", columnList = "subCategory"),
-        @Index(name = "idx_question_difficulty", columnList = "difficulty")
+        @Index(name = "idx_question_difficulty", columnList = "difficulty"),
+        @Index(name = "idx_question_deleted", columnList = "deleted")
     }
 )
+@Where(clause = "deleted = false")
 @Getter
 @Setter
 @Builder
@@ -42,7 +46,11 @@ public class Question {
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String questionText;
-
+    @Column(length = 500)
+    private String link;
+    @Column(nullable = false)
+    private boolean deleted = false;
+    private LocalDateTime deletedAt;
     @Column(nullable = false, columnDefinition = "TEXT")
     private String shortAnswer;
 

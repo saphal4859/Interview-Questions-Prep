@@ -45,6 +45,11 @@ public class QuestionController {
     ) {
         return ResponseEntity.ok(questionService.updateQuestion(id, request));
     }
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteQuestion(@PathVariable Long id) {
+        questionService.deleteQuestion(id);
+        return ResponseEntity.noContent().build(); // 204
+    }
     @PostMapping("/download")
     public ResponseEntity<byte[]> downloadQuestions(
         @RequestBody QuestionSearchRequest request

@@ -13,6 +13,7 @@ public class QuestionResponse {
     private String subCategory;
     private Difficulty difficulty;
     private String questionText;
+    private String link;
     private String shortAnswer;
     private String explanation;
     private String codeSnippet;

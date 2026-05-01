@@ -20,6 +20,7 @@ public class QuestionUpdateRequest {
 
   @NotBlank
   private String questionText;
+  private String link;
 
   @NotBlank
   private String shortAnswer;
