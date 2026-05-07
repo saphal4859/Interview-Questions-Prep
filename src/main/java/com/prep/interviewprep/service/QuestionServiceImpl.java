@@ -25,7 +25,7 @@ public class QuestionServiceImpl implements QuestionService {
 
     private final QuestionRepository questionRepository;
 
-    @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, key = "'filters'")
+    @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, allEntries = true)
     @Override
     public QuestionResponse createQuestion(QuestionCreateRequest request) {
 
@@ -54,7 +54,7 @@ public class QuestionServiceImpl implements QuestionService {
                 .link(saved.getLink())
                 .build();
     }
-    @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, key = "'filters'")
+    @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, allEntries = true)
     @Override
     public List<QuestionResponse> createQuestions(List<QuestionCreateRequest> requests) {
 
@@ -106,7 +106,7 @@ public class QuestionServiceImpl implements QuestionService {
     private <T> Set<T> emptyToNull(Set<T> set) {
         return (set == null || set.isEmpty()) ? null : set;
     }
-    @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, key = "'filters'")
+    @CacheEvict(value = CacheNames.METADATA_FILTERS_VERSION, allEntries = true)
     @Override
     public QuestionResponse updateQuestion(Long id, QuestionUpdateRequest request) {
 
